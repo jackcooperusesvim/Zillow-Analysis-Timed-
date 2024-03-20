@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
@@ -31,17 +32,34 @@ with open("index.html","w") as file:
 print("looking for HomeCardsContainer flex flex-wrap")
 
 #Remove the Ads
+def get_html(driver):
+    elem = driver.find_element(By.XPATH, "//*")
+    return BeautifulSoup(elem.get_attribute("outerHTML"),"lxml")
 
 HCsC = []
-i=1
+pagenum=1
+home_total=1
 while True:
-    parsed_div = parsed_html.select_one("div[id~=MapHomeCard_{}]".format(i))
-    if parsed_div == None:
+    i=1
+    next_button = driver.find_element(By.CSS_SELECTOR, "button[class~=bp-Button][aria-label~=next]")
+    parsed_html = get_html(driver)
+    while True:
+        parsed_div = parsed_html.select_one("div[id~=MapHomeCard_{}]".format(i))
+        if parsed_div == None:
+            break
+        HCsC.append(parsed_div)
+        i+=1
+        home_total+=1
+    print("done with page {} \nNow we click next".format(pagenum))
+    ActionChains(driver).move_to_element(next_button).perform()
+    input("hit enter to go to the next page")
+    if next_button == None:
         break
-    HCsC.append(parsed_div)
-    i+=1
-print(HCsC)
-print("Found {} Homes on this page".format(i))
+    next_button.click()
+    pagenum+=1
+    
+# print(HCsC)
+print("Found {} Homes after searching {} pages".format(home_total,pagenum))
 input()
 
 # for input in states:
